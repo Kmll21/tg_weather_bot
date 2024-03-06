@@ -1,2 +1,5 @@
 python-dotenv
 requests
+aiogram
+apscheduler
+sqlalchemy

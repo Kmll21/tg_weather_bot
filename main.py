@@ -1,21 +1,25 @@
-import json
-import requests
-from datetime import datetime
+import asyncio
+import logging
 
-from config import API_KEY
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.enums.parse_mode import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
+
+import config
+from database.database import Base, engine
+from handlers import router
 
 
-city = "Kazan"
-URL = f"http://api.weatherapi.com/v1/current.json?key={API_KEY}&q={city}&aqi=no"
+async def main():
+    bot = Bot(token=config.BOT_TOKEN, parse_mode=ParseMode.HTML)
+    dp = Dispatcher(storage=MemoryStorage())
+    dp.include_router(router)
+    Base.metadata.create_all(engine)
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
-response = json.loads(requests.get(URL).text)
-
-temp_c = response["current"]["temp_c"]
-local_time = datetime.now().strftime("%H:%M, %d %B")
-
-print(f"""
-      Город: {city}
-      Время: {local_time}
-      Температура: {temp_c}
-      """)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main())
