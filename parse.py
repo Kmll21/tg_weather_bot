@@ -14,7 +14,10 @@ def parse_weather(city: str) -> list[dict]:
             wind_speed = response["current"]["wind_kph"]
             wind_dir = response["current"]["wind_dir"]
 
-            match wind_dir[1:]:
+            if len(wind_dir) >= 3:
+                  wind_dir = wind_dir[1:]
+
+            match wind_dir:
                   case "N":
                         wind_dir = "Cеверный"
                   case "NE":
