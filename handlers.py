@@ -1,10 +1,10 @@
-from aiogram import Router, F
-from aiogram.types import Message
-from aiogram.filters import Command
+import time
 
+from aiogram import Router, F
+from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.filters import Command
 from sqlalchemy.orm import Session
 
-import kb
 from parse import parse_weather
 from database.database import engine
 from database.models import Weather
@@ -15,7 +15,11 @@ router = Router()
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
-    await msg.answer(f"Привет, {msg.from_user.full_name}! Я помогу тебе узнать текущую погоду в твоём городе. Введи название своего города", reply_markup=kb.menu)
+    menu = ReplyKeyboardMarkup(
+        keyboard=[KeyboardButton(text="⛅ Узнать погоду", callback_data="weather")],
+        resize_keyboard=True
+    )
+    await msg.answer(f"Привет, {msg.from_user.full_name}! Я помогу тебе узнать текущую погоду в твоём городе. Введи название своего города", reply_markup=menu)
 
 
 @router.message(F.text.lower() == "⛅ узнать погоду")
@@ -29,29 +33,30 @@ async def get_weather(msg: Message):
             await msg.answer("Город не выбран")
 
 
-@router.message(F.text.lower() == "📍 изменить свой город")
+@router.message(Command("c"))
 async def change_city(msg: Message):
-    await msg.answer("Введите название города")
-    response = parse_weather(msg.text)
+    name = " ".join(msg.text.split(" ")[1:])
+    response = parse_weather(name)
 
     if response != "Некорректное название города":
         with Session(engine) as session:
-            city = session.query(Weather).filter(Weather.user_id == msg.from_user.id).first()
-            city.city = msg.text
+            current_city = session.query(Weather).filter(Weather.user_id == msg.from_user.id).first()
+            current_city.city = name
             session.commit()
+        await msg.answer("Успешно!")
+        await msg.answer(response)
     else:
         await msg.answer("Некорректное название города")
-    await msg.answer()
 
 
 @router.message()
 async def message_handler(msg: Message):
+    time.sleep(1)
     with Session(engine) as session:
         current_city = session.query(Weather).filter(Weather.user_id == msg.from_user.id).first()
         if current_city:
-            await msg.answer(f"Город уже выбран: {current_city.city}")
+            await msg.answer(parse_weather(msg.text))
         else:
-
             new_city = Weather(
                 user_id=msg.from_user.id,
                 city=msg.text

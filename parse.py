@@ -10,6 +10,8 @@ def parse_weather(city: str) -> list[dict]:
       response = json.loads(requests.get(URL).text)
 
       try:
+            current_city = response["location"]["name"]
+            country = response["location"]["country"]
             temp_c = int(response["current"]["temp_c"])
             wind_speed = response["current"]["wind_kph"]
             wind_dir = response["current"]["wind_dir"]
@@ -43,7 +45,7 @@ def parse_weather(city: str) -> list[dict]:
             return "Некорректное название города"
 
       return f"""
-⛅ Погода в твоём городе: {city} | {local_time}
+⛅ Погода в твоём городе: {current_city}, {country} | {local_time}
 
 Температура воздуха: {temp_c}°С
 Скорость ветра: {wind_speed} км/ч
