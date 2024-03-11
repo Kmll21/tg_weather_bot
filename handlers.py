@@ -16,7 +16,7 @@ router = Router()
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     menu = ReplyKeyboardMarkup(
-        keyboard=[KeyboardButton(text="⛅ Узнать погоду", callback_data="weather")],
+        keyboard=[[KeyboardButton(text="⛅ Узнать погоду", callback_data="weather")]],
         resize_keyboard=True
     )
     await msg.answer(f"Привет, {msg.from_user.full_name}! Я помогу тебе узнать текущую погоду в твоём городе. Введи название своего города", reply_markup=menu)
